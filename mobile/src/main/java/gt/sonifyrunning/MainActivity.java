@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //tonePlayer.setPauseTimeInMs(0);
         //tonePlayer.setPausePeriodSeconds(1);
         tonePlayer.setToneFreqInHz(800);
-        tonePlayer.setDuration(.5);
+        tonePlayer.setDuration(1);
         //tonePlayer.play();
     }
 
@@ -51,12 +51,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float x = sensorEvent.values[0];
             float y = sensorEvent.values[1];
             float z = sensorEvent.values[2];
-            String info = String.format("x: %.04f, y: %.04f, z: %.04f", x, y, z);
+            float accel_mag = Math.abs(x) + Math.abs(y) + Math.abs(z);
+            String info = String.format("x: %.04f, y: %.04f, z: %.04f, Total Accel. Mag: %.04f", x, y, z, accel_mag);
             Log.d("myTag", info);
             textView.setText(info);
-            //tonePlayer.setVolume(50);
+            //tonePlayer.setVolume(50); 
             //tonePlayer.stop();
-            tonePlayer.setToneFreqInHz(Math.abs(x) * 200);
+            tonePlayer.setToneFreqInHz(Math.abs(x) * 400);
             tonePlayer.play();
 
         }
