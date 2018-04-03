@@ -12,10 +12,17 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
+
+import net.mabboud.android_tone_player.ContinuousBuzzer;
+import net.mabboud.android_tone_player.OneTimeBuzzer;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
+    private TextView textView;
+    //private ContinuousBuzzer tonePlayer;
+    private OneTimeBuzzer tonePlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,16 +33,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
 
+        textView = (TextView) findViewById(R.id.textView);
+        //tonePlayer = new ContinuousBuzzer();
+        tonePlayer = new OneTimeBuzzer();
+
+        //tonePlayer.setPauseTimeInMs(0);
+        //tonePlayer.setPausePeriodSeconds(1);
+        tonePlayer.setToneFreqInHz(800);
+        tonePlayer.setDuration(.5);
+        //tonePlayer.play();
     }
-
-    /*
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        Sensor mySensor = sensorEvent.sensor;
-        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-        }
-    } */
 
     public void onSensorChanged(SensorEvent sensorEvent) {
         Sensor mySensor = sensorEvent.sensor;
@@ -44,7 +51,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float x = sensorEvent.values[0];
             float y = sensorEvent.values[1];
             float z = sensorEvent.values[2];
-            Log.d("myTag", Float.toString(x));
+            String info = String.format("x: %.04f, y: %.04f, z: %.04f", x, y, z);
+            Log.d("myTag", info);
+            textView.setText(info);
+            //tonePlayer.setVolume(50);
+            //tonePlayer.stop();
+            tonePlayer.setToneFreqInHz(Math.abs(x) * 200);
+            tonePlayer.play();
 
         }
     }
