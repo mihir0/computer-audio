@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             String info = String.format("x: %.04f, y: %.04f, z: %.04f, Total Accel. Mag: %.04f", x, y, z, accel_mag);
             Log.d("myTag", info);
             textView.setText(info);
-            //tonePlayer.setVolume(50); 
+            //tonePlayer.setVolume(50);
             //tonePlayer.stop();
             tonePlayer.setToneFreqInHz(Math.abs(x) * 400);
             tonePlayer.play();
