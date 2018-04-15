@@ -4,25 +4,38 @@
  **/
 package gt.sonifyrunning;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import net.mabboud.android_tone_player.ContinuousBuzzer;
-import net.mabboud.android_tone_player.OneTimeBuzzer;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
     private TextView textView;
-    //private ContinuousBuzzer tonePlayer;
-    private OneTimeBuzzer tonePlayer;
+    private Date startTime;
+
+    private String baseDir, fileName, filePath;
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,17 +44,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Log.d("tag1", "On Create.");
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+        senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
         textView = (TextView) findViewById(R.id.textView);
-        //tonePlayer = new ContinuousBuzzer();
-        tonePlayer = new OneTimeBuzzer();
 
-        //tonePlayer.setPauseTimeInMs(0);
-        //tonePlayer.setPausePeriodSeconds(1);
-        tonePlayer.setToneFreqInHz(800);
-        tonePlayer.setDuration(1);
-        //tonePlayer.play();
+        MainActivity.verifyStoragePermissions(this); //verify/get permission to write file
+
+        //if file exists already, delete
+        baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        fileName = "AccelerometerData.csv";
+        filePath = baseDir + File.separator + fileName;
+        File f = new File(filePath);
+        if (f.exists()) {
+            f.delete();
+        }
+
+        startTime = Calendar.getInstance().getTime();
     }
 
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -52,14 +70,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             float y = sensorEvent.values[1];
             float z = sensorEvent.values[2];
             float accel_mag = Math.abs(x) + Math.abs(y) + Math.abs(z);
-            String info = String.format("x: %.04f, y: %.04f, z: %.04f, Total Accel. Mag: %.04f", x, y, z, accel_mag);
-            Log.d("myTag", info);
-            textView.setText(info);
-            //tonePlayer.setVolume(50);
-            //tonePlayer.stop();
-            tonePlayer.setToneFreqInHz(Math.abs(x) * 400);
-            tonePlayer.play();
 
+            String line = ""; //Time(ms), x, y ,z
+            double time = Calendar.getInstance().getTime().getTime() - startTime.getTime();
+            line = String.format("%.00f, %.04f, %.04f, %.04f\n", time, x, y, z);
+            textView.setText(line);
+            writeToFile(line);
         }
     }
 
@@ -78,4 +94,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onResume();
         senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
+
+    public void writeToFile(String line) {
+        try {
+            FileWriter writer = new FileWriter(filePath, true);
+            writer.append(line);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * Checks if the app has permission to write to device storage
+     *
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+
+
+        }
+    }
+
 }
