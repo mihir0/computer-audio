@@ -16,6 +16,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.File;
@@ -27,6 +30,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
     private TextView textView;
+    private EditText editText;
+    private Button startButton;
     private Date startTime;
 
     private String baseDir, fileName, filePath;
@@ -37,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
+    private boolean active = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,37 +51,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-
-        textView = (TextView) findViewById(R.id.textView);
-
         MainActivity.verifyStoragePermissions(this); //verify/get permission to write file
 
-        //if file exists already, delete
-        baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        fileName = "AccelerometerData.csv";
-        filePath = baseDir + File.separator + fileName;
-        File f = new File(filePath);
-        if (f.exists()) {
-            f.delete();
-        }
 
-        startTime = Calendar.getInstance().getTime();
+        textView = (TextView) findViewById(R.id.textView);
+        editText = (EditText) findViewById(R.id.editText);
+        startButton = findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (!active) {
+                    active = true;
+                    editText.setEnabled(false);
+                    startButton.setEnabled(false);
+                    //set file name
+                    //if file exists already, delete
+                    baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+                    fileName = editText.getText() + ".csv";
+                    filePath = baseDir + File.separator + fileName;
+                    File f = new File(filePath);
+                    if (f.exists()) {
+                        f.delete();
+                    }
+                    startTime = Calendar.getInstance().getTime(); //start timer
+                }
+            }
+        });
     }
 
     public void onSensorChanged(SensorEvent sensorEvent) {
-        Sensor mySensor = sensorEvent.sensor;
-        Log.d("sensor", "Sensor changed");
-        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            float x = sensorEvent.values[0];
-            float y = sensorEvent.values[1];
-            float z = sensorEvent.values[2];
-            float accel_mag = Math.abs(x) + Math.abs(y) + Math.abs(z);
+        if (active) {
+            Sensor mySensor = sensorEvent.sensor;
+            //Log.d("sensor", "Sensor changed");
+            if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                float x = sensorEvent.values[0];
+                float y = sensorEvent.values[1];
+                float z = sensorEvent.values[2];
+                float accel_mag = Math.abs(x) + Math.abs(y) + Math.abs(z);
 
-            String line = ""; //Time(ms), x, y ,z
-            double time = Calendar.getInstance().getTime().getTime() - startTime.getTime();
-            line = String.format("%.00f, %.04f, %.04f, %.04f\n", time, x, y, z);
-            textView.setText(line);
-            writeToFile(line);
+                String line = ""; //Time(ms), x, y ,z
+                double time = Calendar.getInstance().getTime().getTime() - startTime.getTime();
+                line = String.format("%.00f, %.04f, %.04f, %.04f\n", time, x, y, z);
+                textView.setText(line);
+                writeToFile(line);
+            }
         }
     }
 
