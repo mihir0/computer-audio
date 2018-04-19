@@ -12,6 +12,7 @@ import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.SoundPool;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,7 +27,8 @@ import java.io.FileWriter;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity /*implements SensorEventListener*/ {
+    /*
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
     private TextView textView;
@@ -34,20 +36,45 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Button startButton;
     private Date startTime;
 
-    private String baseDir, fileName, filePath;
+    private String baseDir, fileName, filePath; */
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-
     private boolean active = false;
+
+    private SoundPool soundPool;
+    private int soundID = -1;
+    private int streamID;
+    private boolean soundsLoaded = false;
+    private Button startButton;
+    private void initSound() {
+        Context mContext = getApplicationContext();
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(1)
+                .build();
+        soundID = soundPool.load(mContext, R.raw.test_1, 1);
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            public void onLoadComplete(SoundPool soundPool, int sampleId,int status) {
+                soundsLoaded = true;
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Log.d("tag1", "On Create.");
+        startButton = findViewById(R.id.startButton);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                streamID = soundPool.play(soundID, 1, 1, 1, 1, 1f);
+            }
+        });
+
+        /*
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -75,9 +102,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     startTime = Calendar.getInstance().getTime(); //start timer
                 }
             }
-        });
+        }); */
+        initSound();
     }
 
+    /*
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (active) {
             Sensor mySensor = sensorEvent.sensor;
@@ -103,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+
     protected void onPause() {
         super.onPause();
         senSensorManager.unregisterListener(this);
@@ -121,9 +151,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
-
+    /*
     /**
      * Checks if the app has permission to write to device storage
      *
@@ -142,9 +171,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE
             );
-
-
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        soundPool.release();
+        super.onDestroy();
+        soundPool = null;
     }
 
 }
