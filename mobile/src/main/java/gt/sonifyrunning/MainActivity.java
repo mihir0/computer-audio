@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
@@ -48,8 +49,10 @@ public class MainActivity extends AppCompatActivity /*implements SensorEventList
     private SoundPool soundPool;
     private int soundID = -1;
     private int streamID;
+    private int volume = 50;
     private boolean soundsLoaded = false;
     private Button startButton;
+    private SeekBar seekBar;
     private void initSound() {
         Context mContext = getApplicationContext();
         soundPool = new SoundPool.Builder()
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity /*implements SensorEventList
                 .build();
         soundID = soundPool.load(mContext, R.raw.test_1, 1);
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            public void onLoadComplete(SoundPool soundPool, int sampleId,int status) {
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
                 soundsLoaded = true;
             }
         });
@@ -70,9 +73,29 @@ public class MainActivity extends AppCompatActivity /*implements SensorEventList
         startButton = findViewById(R.id.startButton);
         startButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                streamID = soundPool.play(soundID, 1, 1, 1, 1, 1f);
+                streamID = soundPool.play(soundID, 1, 1, 1, 3, 1f);
             }
         });
+        seekBar = findViewById(R.id.seekBar);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // updated continuously as the user slides the thumb
+                volume = progress;
+                soundPool.setVolume(streamID, (float) volume / 100, (float) volume / 100);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // called when the user first touches the SeekBar
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // called after the user finishes moving the SeekBar
+            }
+        });
+
 
         /*
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
