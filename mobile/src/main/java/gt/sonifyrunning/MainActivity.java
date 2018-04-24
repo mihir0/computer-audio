@@ -12,30 +12,23 @@ import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.SoundPool;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
-import com.opencsv.CSVReader;
-
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -43,9 +36,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor senAccelerometer;
     private float[] accelBuffer = {0f, 0f, 0f}; //stores old accelerometer values
     private TextView textView, textView2, cadenceTextView;
-    private EditText editText;
+    private EditText editText, cadenceRangeEditText;
     private Date startTime;
     private SeekBar seekBar, cadenceSeekBar;
+    private Switch strideSwitch, stepSwitch, cadenceSwitch;
 
     private String baseDir, fileName, filePath;
 
@@ -54,12 +48,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-    private boolean active = false;
+    private boolean active = false; //waits until user hit's start button
+    private boolean strideOn = true, stepOn = true, cadenceOn = true; //toggles for sounds
 
     private SoundPool soundPool;
     private int soundID[] = {-1, -1, -1};
     private int streamID[] = {-1, -1, -1};
-    private float volume[] = {1f, 0f, 1f};
+    private float volume[] = {1f, 1f, 1f};
     private boolean soundsLoaded = false;
     private Button startButton;
     private int sensorIndex = 0; //indicates where in sensorReadings we currently are
@@ -72,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float cadenceBuffer = 0; //steps per minute
     private int idealCadence = 90;
     private float rateBuffer = 1f;
+    private int cadenceRange = 5; //creates a threshold for what an acceptable cadence is
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +80,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         seekBar = findViewById(R.id.seekBar);
         cadenceSeekBar = findViewById(R.id.cadenceSeekBar);
         cadenceTextView = findViewById(R.id.cadenceTextView);
+        cadenceRangeEditText = findViewById(R.id.cadenceRangeEditText);
+        strideSwitch = findViewById(R.id.strideSwitch);
+        stepSwitch = findViewById(R.id.stepSwitch);
+        cadenceSwitch = findViewById(R.id.cadenceSwitch);
 
         initSound();
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -97,9 +97,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     startButton.setEnabled(false);
                     cadenceSeekBar.setEnabled(false);
                     cadenceTextView.setEnabled(false);
+                    cadenceRangeEditText.setEnabled(false);
 
                     idealCadence = cadenceSeekBar.getProgress();
-
+                    cadenceRange = Integer.parseInt(cadenceRangeEditText.getText().toString());
+                    strideOn = strideSwitch.isChecked();
+                    stepOn = stepSwitch.isChecked();
+                    cadenceOn = cadenceSwitch.isChecked();
+                    volume[0] = strideOn ? 1f : 0f;
+                    volume[1] = stepOn ? 1f : 0f;
+                    volume[2] = cadenceOn ? 1f : 0f;
                     //set file name
                     //if file exists already, delete
                     baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -110,8 +117,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         f.delete();
                     }
                     startTime = Calendar.getInstance().getTime();
-                    streamID[0] = soundPool.play(soundID[0], 0, 0, 1, -1, 1f); //MUTED
-                    streamID[2] = soundPool.play(soundID[2], 1, 1, 1, -1, 1f);
+                    streamID[0] = soundPool.play(soundID[0], volume[0], volume[0], 1, -1, 1f);
+                    streamID[2] = soundPool.play(soundID[2], volume[2], volume[2], 1, -1, 1f);
                 }
             }
         });
@@ -132,15 +139,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             }
         });
+        strideSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                strideOn = b;
+                volume[0] = strideOn ? 1f : 0f;
+            }
+        });
+        stepSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                stepOn = b;
+                volume[1] = stepOn ? 1f : 0f;
+            }
+        });
+        cadenceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                cadenceOn = b;
+                volume[2] = cadenceOn ? 1f : 0f;
+            }
+        });
     }
 
     private void initSound() {
         Context mContext = getApplicationContext();
         soundPool = new SoundPool.Builder()
-                .setMaxStreams(2)
+                .setMaxStreams(4)
                 .build();
-        soundID[0] = soundPool.load(mContext, R.raw.synth1, 1); //root
-        soundID[1] = soundPool.load(mContext, R.raw.beep1, 1); //beep sound
+        soundID[0] = soundPool.load(mContext, R.raw.root2, 1); //root
+        soundID[1] = soundPool.load(mContext, R.raw.kick1, 1); //beep sound
         soundID[2] = soundPool.load(mContext, R.raw.interval1, 1); //5th interval sound
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
@@ -168,10 +196,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         writeToFile(line);
         textView2.setText(String.format("Cadence: %.04f", cadenceBuffer));
         if (soundsLoaded) {
-            //volume[0] = Math.max(Math.min(1, volume[0] + map(y, 9.4f, 13f, -1, 1)), 0);
             volume[0] = map(y, 9.4f, 13f, 0f, 1);
-            //Log.d("Gain", String.valueOf(volume[0]));
-            soundPool.setVolume(streamID[0], volume[0], volume[0]);
+            Log.d("Gain", String.valueOf(volume[0]));
+            if (strideOn) {
+                soundPool.setVolume(streamID[0], volume[0], volume[0]);
+            } else {
+                soundPool.setVolume(streamID[0], 0f, 0f);
+            }
             seekBar.setProgress((int) (volume[0] * 100));
             if (checkForStep) {
                 float dx = accel_x - accelBuffer[0];
@@ -183,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     stepStartTime = Calendar.getInstance().getTime().getTime();
                     checkForStep = false;
                     //Log.d("Step", "Start");
-                    //streamID[1] = soundPool.play(soundID[1], 1, 1, 1, 0, 1f); //step sound
+                    if (stepOn) { streamID[1] = soundPool.play(soundID[1], volume[1], volume[1], 1, 0, 1f);} //step indicator
                 }
             } else {
                 if (Calendar.getInstance().getTime().getTime() - stepStartTime >= stepLength) {
@@ -192,17 +223,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
             //SONIFY CADENCE
-            //float rate = map(cadenceBuffer, idealCadence - 5, idealCadence + 5, .75f, 2f);
-            if (cadenceBuffer < idealCadence - 5) {
+            if (cadenceBuffer < idealCadence - cadenceRange) {
                 rateBuffer = .99f * (rateBuffer) + .01f * (rateBuffer * .99f);
-            } else if (cadenceBuffer > idealCadence + 5) {
+            } else if (cadenceBuffer > idealCadence + cadenceRange) {
                 rateBuffer = .99f * (rateBuffer) + .01f * (rateBuffer * 1.01f);
             } else {
                 rateBuffer = .99f * (rateBuffer) + .01f * (1f);
             }
             rateBuffer = Math.max(Math.min(1.25f, rateBuffer), .75f); //ensure rateBuffer stays within .75 to 1.25
-            Log.d("rate", String.valueOf(rateBuffer));
+            //Log.d("rate", String.valueOf(rateBuffer));
             soundPool.setRate(streamID[2], rateBuffer);
+            if (cadenceOn) {
+                soundPool.setVolume(streamID[2], volume[2], volume[2]);
+            } else {
+                soundPool.setVolume(streamID[2], 0f, 0f);
+            }
         }
         //float interval = stepStartTime - stepEndTime; //problem this line causes cadence buffer to get stuck if there are no steps
         float interval = Calendar.getInstance().getTime().getTime() - stepEndTime;

@@ -30,6 +30,8 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textView" />
+
+
     <TextView
         android:id="@+id/cadenceTextView"
         android:layout_width="wrap_content"
@@ -52,6 +54,27 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText" />
+
+    <TextView
+        android:id="@+id/cadenceRangeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="15dp"
+        android:text="Ideal cadence range:"
+        android:textColor="@color/colorPrimary"
+        android:textSize="5pt"
+        app:layout_constraintBottom_toBottomOf="@id/cadenceRangeEditText"
+        app:layout_constraintTop_toTopOf="@id/cadenceRangeEditText"
+        />
+    <EditText
+        android:id="@+id/cadenceRangeEditText"
+        android:layout_width="25dp"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:text="5"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cadenceSeekBar" />
     <Button
         android:id="@+id/soundButton"
         android:layout_width="wrap_content"
@@ -68,7 +91,7 @@
         android:text="Start"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/soundButton" />
+        app:layout_constraintTop_toBottomOf="@id/cadenceRangeEditText" />
 
     <SeekBar
         android:id="@+id/seekBar"
@@ -76,7 +99,7 @@
         android:layout_height="13dp"
         android:max="100"
         android:min="0"
-        android:visibility="visible"
+        android:visibility="gone"
         android:progress="100"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -86,12 +109,48 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="20dp"
         android:text="Cadence:"
         android:textColor="@color/colorPrimaryDark"
         android:textSize="10pt"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/seekBar" />
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sonification Toggles"
+        android:paddingTop="20dp"
+        android:textColor="@color/colorPrimaryDark"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2"/>
+    <Switch
+        android:id="@+id/strideSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stride"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+    <Switch
+        android:id="@+id/stepSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Step"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/strideSwitch"/>
+    <Switch
+        android:id="@+id/cadenceSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cadence"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stepSwitch"/>
+
+
 
 </android.support.constraint.ConstraintLayout>
