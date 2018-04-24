@@ -110,7 +110,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="Cadence:"
+        android:text="Cadence"
         android:textColor="@color/colorPrimaryDark"
         android:textSize="10pt"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -131,6 +131,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Stride"
+        android:checked="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView3" />
@@ -139,6 +140,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Step"
+        android:checked="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/strideSwitch"/>
@@ -147,6 +149,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Cadence"
+        android:checked="true"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/stepSwitch"/>

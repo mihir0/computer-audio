@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         textView2.setText(String.format("Cadence: %.04f", cadenceBuffer));
         if (soundsLoaded) {
             volume[0] = map(y, 9.4f, 13f, 0f, 1);
-            Log.d("Gain", String.valueOf(volume[0]));
+            // Log.d("Gain", String.valueOf(volume[0]));
             if (strideOn) {
                 soundPool.setVolume(streamID[0], volume[0], volume[0]);
             } else {
